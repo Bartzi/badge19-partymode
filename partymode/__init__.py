@@ -8,17 +8,15 @@ import os
 from color import Color
 
 disp = display.open()
-sensor = 1
+sensor = 0
 
 sensors = [
-    {"sensor": bhi160.BHI160Orientation(), "name": "Orientation"},
+    # {"sensor": bhi160.BHI160Orientation(), "name": "Orientation"},
     {"sensor": bhi160.BHI160Accelerometer(), "name": "Accelerometer"},
     {"sensor": bhi160.BHI160Gyroscope(), "name": "Gyroscope"},
 ]
 
-subtractors = [180, 0.5, 128]
-last_values = [0, 0, 0]
-current_led = 0
+subtractors = [0.5, 128]
 
 battery_color_good = [  0,230,0]
 battery_color_ok   = [255,215,0]
@@ -55,7 +53,7 @@ def render_battery(disp):
     disp.rect(155, 4, 157, 7, filled=True, col=c)
     try:
         v = os.read_battery()
-        disp.print("{} V".format(v), posy=40, fg=c)
+        disp.print("{:.4} V".format(v), posy=40, fg=c)
         if v < 4.0:
             disp.rect(151, 3, 154, 8, filled=True, col=[0,0,0])
         if v < 3.8:
@@ -80,12 +78,6 @@ while True:
         elif sample.status == 3:
             color = [0, 200, 0]
 
-        # disp.print(sensors[sensor]["name"], posy=0)
-        # disp.print("X: %f" % sample.x, posy=20, fg=color)
-        # disp.print("Y: %f" % sample.y, posy=40, fg=color)
-        # disp.print("Z: %f" % sample.z, posy=60, fg=color)
-
-
         subtractor = subtractors[sensor]
 
         colors = [abs(s) - subtractor for s in [sample.x, sample.y, sample.z]]
@@ -93,18 +85,12 @@ while True:
 
         new_color = Color(*display_colors)
 
-        # disp.print("X: %f" % display_colors[0], posy=20, fg=color)
-        # disp.print("Y: %f" % display_colors[1], posy=40, fg=color)
-        # disp.print("Z: %f" % display_colors[2], posy=60, fg=color)
         render_battery(disp)
 
         disp.update()
 
         leds.set_all([new_color for _ in range(11)])
-        # current_led += 1
-        # current_led = current_led % 11
-        
-
+       
     # Read button
     v = buttons.read(buttons.BOTTOM_RIGHT)
     if v == 0:
@@ -113,5 +99,3 @@ while True:
     if not button_pressed and v & buttons.BOTTOM_RIGHT != 0:
         button_pressed = True
         sensor = (sensor + 1) % len(sensors)
-
-    # utime.sleep(0.05)
